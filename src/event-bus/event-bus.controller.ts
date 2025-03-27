@@ -16,13 +16,13 @@ export class EventBusController {
   @EventPattern("order.updated")
   async handleOrderUpdated(orderEventDto: OrderEventDto) {
     // Useful for perhaps sending to a notification service to send emails to user?
-    console.log(`Processing order ${orderEventDto.orderId}`);
+    console.log(`Processing updated order ${orderEventDto.orderId}`);
   }
 
   @EventPattern("order.deleted")
   async handleOrderDeleted(orderEventDto: OrderEventDto) {
     // Update the InventoryService to release reserved stock
-    console.log(`Processing order ${orderEventDto.orderId}`);
+    console.log(`Processing deleted order ${orderEventDto.orderId}`);
   }
 
   @EventPattern("customer.updated")

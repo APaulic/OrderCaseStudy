@@ -25,9 +25,11 @@ import { ApiOkResponse, ApiSecurity } from "@nestjs/swagger";
 import { ApiKeyAuthGuard } from "../api-key-auth/api-key-auth.guard";
 import { EventBusService } from "../event-bus/event-bus.service";
 import { CacheInterceptor } from "@nestjs/cache-manager";
+import { CacheTTL } from "@nestjs/common/cache";
 
-@ApiSecurity("apiKey")
+@CacheTTL(5000)
 @UseGuards(ApiKeyAuthGuard)
+@ApiSecurity("apiKey")
 @UseInterceptors(CacheInterceptor)
 @Controller("order")
 export class OrderController {
@@ -48,7 +50,6 @@ export class OrderController {
   })
   @Get(":orderId")
   async get(@Param() params: SingleOrderDto) {
-    console.log(params.orderId);
     try {
       const order = await this.orderService.getOrder({
         ...params,
@@ -111,6 +112,7 @@ export class OrderController {
 
     // Check new status is valid
     if (
+      updateOrderDto.status &&
       !Object.values(OrderStatus).includes(
         <OrderStatus>updateOrderDto.status?.toLowerCase(),
       )
@@ -120,10 +122,12 @@ export class OrderController {
 
     const mergedOrder: OrderDto = {
       ...existingOrder,
-      status: updateOrderDto.status,
-      trackingLink: updateOrderDto.trackingLink,
-      trackingCompany: updateOrderDto.trackingCompany,
-      trackingNumber: updateOrderDto.trackingNumber,
+      status: updateOrderDto.status ?? existingOrder.status,
+      trackingLink: updateOrderDto.trackingLink ?? existingOrder.trackingLink,
+      trackingCompany:
+        updateOrderDto.trackingCompany ?? existingOrder.trackingCompany,
+      trackingNumber:
+        updateOrderDto.trackingNumber ?? existingOrder.trackingNumber,
     };
 
     const updatedOrder = await this.orderService.updateOrder(mergedOrder);

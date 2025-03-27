@@ -36,13 +36,12 @@ export class OrderDto {
   customerId: string;
 
   @ApiProperty({
-    example: "ord123",
     required: false,
   })
   orderId: string;
 
   @ApiProperty({
-    example: "cus123",
+    example: "pending",
     required: false,
     enum: OrderStatus,
   })
