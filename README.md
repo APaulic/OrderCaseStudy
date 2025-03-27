@@ -43,6 +43,8 @@ You can also invoke the API endpoints with the below example curl commands:
 
 ### `/create`
 
+Create a new order for customer `abc123` for a single `prod123`
+
 ```bash
 curl -X 'POST' \
 'http://localhost:3000/order/create' \
@@ -51,13 +53,47 @@ curl -X 'POST' \
 -d '{ 
     "items": [
       {
-        "productId": "abc123",
+        "productId": "prod123",
         "quantity": 1
       }
     ],
     "customerId": "cus123"
   }'
 
+```
+
+### `/update`
+
+Add shipping details and progress the status
+
+```bash
+curl -X 'PUT' \
+  'http://localhost:3000/order/update' \
+  -H 'accept: application/json' \
+  -H 'x-api-key: local-secret-api-key' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "orderId": "41bda4f5-2562-4c7e-968a-5caa92d8a75d",
+  "status": "shipped",
+  "trackingCompany": "Aus Post",
+  "trackingNumber": "EE 999 999 999 AU",
+  "trackingLink": "https://auspost.com.au/mypost/track/"
+}'
+```
+
+### `/delete`
+
+Soft delete the order
+
+```bash
+curl -X 'DELETE' \
+  'http://localhost:3000/order/delete' \
+  -H 'accept: application/json' \
+  -H 'x-api-key: local-secret-api-key' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "orderId": "41bda4f5-2562-4c7e-968a-5caa92d8a75d"
+}'
 ```
 
 ## Considerations
@@ -102,6 +138,16 @@ manage and track changes for each entity.
 
 This demonstration uses in memory caching provided by NestJS
 
+### Validation
+
+There could be a lot more validation in these endpoints such as valid ID formats for customer, product, etc. There could
+also be business logic around enforcing a particular order with status changes.
+
+### Error Handling
+
+I'll admit that there is very little error handling in this example. For example, if the an external service returns
+null this could cause issues. Also, if there is no DB this will pretty much fall over.
+
 ## Explanation of endpoints
 
 This includes their function, action and limitations
@@ -122,7 +168,7 @@ ensure that the stock will be available at time of payment.
 
 ### `/update`
 
-This endpoints is used to update an existing Order item. This also allows updating the status of the order as well as
+This endpoint is used to update an existing Order item. This also allows updating the status of the order as well as
 adding shipping details
 
 #### Limitations:
