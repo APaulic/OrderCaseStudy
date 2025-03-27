@@ -41,59 +41,80 @@ at http://localhost:3000/api
 
 You can also invoke the API endpoints with the below example curl commands:
 
-### `/create`
+### `/order/create`
 
 Create a new order for customer `abc123` for a single `prod123`
 
 ```bash
 curl -X 'POST' \
-'http://localhost:3000/order/create' \
--H 'accept: */*' \
--H 'Content-Type: application/json' \
--d '{ 
-    "items": [
-      {
-        "productId": "prod123",
-        "quantity": 1
-      }
-    ],
-    "customerId": "cus123"
-  }'
-
+  'http://localhost:3000/order/create' \
+  -H 'accept: application/json' \
+  -H 'x-api-key: local-secret-api-key' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "items": [
+    {
+      "productId": "prod-123",
+      "quantity": 1
+    },
+    {
+      "productId": "prod-456",
+      "quantity": 3
+    }
+  ],
+  "customerId": "cus-123"
+}'
 ```
 
-### `/update`
+### `/order/{orderId}`
+
+Retrieve an order
+
+```bash
+curl -X 'GET' \
+  'http://localhost:3000/order/9b8fa4d1-9f7b-4b2a-a806-bf3456e73d25' \
+  -H 'accept: application/json' \
+  -H 'x-api-key: local-secret-api-key'
+```
+
+### `/order/update/{orderId}`
 
 Add shipping details and progress the status
 
 ```bash
 curl -X 'PUT' \
-  'http://localhost:3000/order/update' \
+  'http://localhost:3000/order/update/9b8fa4d1-9f7b-4b2a-a806-bf3456e73d25' \
   -H 'accept: application/json' \
   -H 'x-api-key: local-secret-api-key' \
   -H 'Content-Type: application/json' \
   -d '{
-  "orderId": "41bda4f5-2562-4c7e-968a-5caa92d8a75d",
+  "customerId": "cus-123",
   "status": "shipped",
-  "trackingCompany": "Aus Post",
+  "trackingCompany": "Australia Post",
   "trackingNumber": "EE 999 999 999 AU",
-  "trackingLink": "https://auspost.com.au/mypost/track/"
+  "trackingLink": "https://auspost.com.au/mypost/track/",
+  "items": [
+    {
+      "productId": "prod-123",
+      "quantity": 1
+    },
+    {
+      "productId": "prod-456",
+      "quantity": 3
+    }
+  ]
 }'
 ```
 
-### `/delete`
+### `/order/delete/{orderId}`
 
 Soft delete the order
 
 ```bash
 curl -X 'DELETE' \
-  'http://localhost:3000/order/delete' \
+  'http://localhost:3000/order/delete/9b8fa4d1-9f7b-4b2a-a806-bf3456e73d25' \
   -H 'accept: application/json' \
-  -H 'x-api-key: local-secret-api-key' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "orderId": "41bda4f5-2562-4c7e-968a-5caa92d8a75d"
-}'
+  -H 'x-api-key: local-secret-api-key'
 ```
 
 ## Considerations

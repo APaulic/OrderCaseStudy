@@ -9,7 +9,7 @@ export enum OrderStatus {
 
 export class OrderProduct {
   @ApiProperty({
-    example: "abc123",
+    example: "prod-123",
     description: "ID of a product",
     required: true,
   })
@@ -29,14 +29,11 @@ export class OrderDto {
   items: OrderProduct[];
 
   @ApiProperty({
-    example: "cus123",
+    example: "cus-123",
     required: false,
   })
   customerId: string;
 
-  @ApiProperty({
-    required: false,
-  })
   orderId: string;
 
   @ApiProperty({
@@ -47,7 +44,7 @@ export class OrderDto {
   status: OrderStatus;
 
   @ApiProperty({
-    example: "Aus Post",
+    example: "Australia Post",
     required: false,
     enum: OrderStatus,
   })
@@ -76,11 +73,11 @@ export class CreateOrderDto implements Omit<OrderDto, "status" | "orderId"> {
       properties: {
         productId: {
           type: "string",
-          example: "abc123",
+          example: "prod-123",
         },
         quantity: {
           type: "number",
-          example: 1,
+          example: 3,
         },
       },
     },
@@ -89,24 +86,44 @@ export class CreateOrderDto implements Omit<OrderDto, "status" | "orderId"> {
   })
   items: OrderProduct[];
 
-  @ApiProperty({ type: "string" })
+  @ApiProperty({ type: "string", example: "cus-123" })
   customerId: string;
 }
 
-export class UpdateOrderStatusDto {
-  @ApiProperty({
-    example: "abc123",
-    description: "The ID of the order",
-    required: true,
-  })
-  orderId: string;
+export class UpdateOrderDto implements Omit<OrderDto, "orderId" | "deleted"> {
+  items: OrderProduct[];
 
   @ApiProperty({
-    example: "shipped",
-    description: "The status of the order, e.g. Pending, Shipped, Completed",
-    required: true,
+    example: "cus-123",
+    required: false,
+  })
+  customerId: string;
+
+  @ApiProperty({
+    example: "pending",
+    required: false,
+    enum: OrderStatus,
   })
   status: OrderStatus;
+
+  @ApiProperty({
+    example: "Australia Post",
+    required: false,
+    enum: OrderStatus,
+  })
+  trackingCompany?: string;
+
+  @ApiProperty({
+    example: "EE 999 999 999 AU",
+    required: false,
+  })
+  trackingNumber?: string;
+
+  @ApiProperty({
+    example: "https://auspost.com.au/mypost/track/",
+    required: false,
+  })
+  trackingLink?: string;
 }
 
 // Generic name to allow extending for potential unique identifiers.
@@ -114,7 +131,7 @@ export class UpdateOrderStatusDto {
 // This is basically just a demonstration of "forward thinking" and code re-usability
 export class SingleOrderDto {
   @ApiProperty({
-    example: "abc123",
+    example: "9610b8bc-4b9f-46b3-b050-e73318cfa73e",
     description: "The ID of the order",
     required: true,
     type: "string",
@@ -124,7 +141,7 @@ export class SingleOrderDto {
 }
 
 export class OperationResponseOrderDto {
-  data: OrderDto;
+  data: Omit<OrderDto, "orderId" | "deleted">;
   message: string;
   success: boolean;
 }

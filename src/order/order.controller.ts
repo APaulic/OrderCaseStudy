@@ -18,6 +18,7 @@ import {
   OrderDto,
   OrderStatus,
   SingleOrderDto,
+  UpdateOrderDto,
 } from "./dto/order.dto";
 import { ApiOkResponse, ApiSecurity } from "@nestjs/swagger";
 import { ApiKeyAuthGuard } from "../api-key-auth/api-key-auth.guard";
@@ -41,17 +42,17 @@ export class OrderController {
     isArray: false,
   })
   @Get(":orderId")
-  async get(@Param() params: SingleOrderDto) {
+  async get(@Param() { orderId }: SingleOrderDto) {
     try {
       const order = await this.orderService.getOrder({
-        ...params,
+        orderId,
       });
 
       if (order) {
         return order;
       }
     } catch (e) {
-      console.error(`Failed to fetch order with id ${params.orderId}`, e);
+      console.error(`Failed to fetch order with id ${orderId}`, e);
     }
 
     throw new HttpException("Not found", HttpStatus.NOT_FOUND);
@@ -92,10 +93,13 @@ export class OrderController {
     type: OperationResponseOrderDto,
     isArray: false,
   })
-  @Put("/update")
-  async update(@Body() updateOrderDto: OrderDto) {
+  @Put("/update/:orderId")
+  async update(
+    @Param() { orderId }: SingleOrderDto,
+    @Body() updateOrderDto: UpdateOrderDto,
+  ) {
     const existingOrder = await this.orderService.getOrder({
-      ...updateOrderDto,
+      orderId,
     });
 
     if (!existingOrder) {
@@ -125,7 +129,7 @@ export class OrderController {
     const updatedOrder = await this.orderService.updateOrder(mergedOrder);
 
     if (!updatedOrder) {
-      console.error(`Failed to update order ${updateOrderDto.orderId}`);
+      console.error(`Failed to update order ${orderId}`);
       return null;
     }
 
@@ -145,10 +149,10 @@ export class OrderController {
     type: OperationResponseOrderDto,
     isArray: false,
   })
-  @Delete("/delete")
-  async delete(@Body() deleteOrderDto: SingleOrderDto) {
+  @Delete("/delete/:orderId")
+  async delete(@Param() { orderId }: SingleOrderDto) {
     const existingOrder = await this.orderService.getOrder({
-      ...deleteOrderDto,
+      orderId,
     });
 
     if (!existingOrder) {
@@ -156,11 +160,11 @@ export class OrderController {
     }
 
     const updatedOrder = await this.orderService.softDeleteOrder({
-      ...deleteOrderDto,
+      orderId,
     });
 
     if (!updatedOrder) {
-      console.error(`Failed to soft delete order ${deleteOrderDto.orderId}`);
+      console.error(`Failed to soft delete order ${orderId}`);
       return null;
     }
 
