@@ -1,5 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
 
 export enum OrderStatus {
   pending = "pending",
@@ -70,7 +69,6 @@ export class OrderDto {
 }
 
 export class CreateOrderDto implements Omit<OrderDto, "status" | "orderId"> {
-  @Type(() => OrderProduct)
   @ApiProperty({
     type: "array",
     items: {
