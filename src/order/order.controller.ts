@@ -10,8 +10,6 @@ import {
   Put,
   UseGuards,
   UseInterceptors,
-  UsePipes,
-  ValidationPipe,
 } from "@nestjs/common";
 import { OrderService } from "./order.service";
 import {
@@ -38,12 +36,6 @@ export class OrderController {
     private readonly eventBusService: EventBusService,
   ) {}
 
-  @UsePipes(
-    new ValidationPipe({
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  )
   @ApiOkResponse({
     type: OrderDto,
     isArray: false,
