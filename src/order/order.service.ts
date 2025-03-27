@@ -97,6 +97,19 @@ export class OrderService {
     return await this.getOrder({ orderId: updateOrderDto.orderId });
   }
 
+  async softDeleteOrder({ orderId }: SingleOrderDto): Promise<OrderDto | null> {
+    // Write order to DB
+    await this.db
+      .update(Orders)
+      .set({
+        deleted: true,
+      })
+      .where(eq(Orders.orderId, orderId));
+
+    // Rather than return from the update query, we re-use the existing get query to fetch the entire order
+    return await this.getOrder({ orderId: orderId });
+  }
+
   async getOrder({ orderId }: SingleOrderDto): Promise<OrderDto | null> {
     // Read order from DB
     const orderQuery = await this.db
@@ -106,6 +119,10 @@ export class OrderService {
       .where(and(eq(Orders.orderId, orderId), eq(Orders.deleted, false)));
 
     const order = orderQuery?.[0]?.orders;
+
+    if (!order) {
+      return null;
+    }
 
     return {
       orderId: order.orderId,

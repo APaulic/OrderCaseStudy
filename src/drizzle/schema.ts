@@ -25,7 +25,7 @@ export const OrdersRelations = relations(Orders, ({ many }) => ({
 
 export const OrderItems = pgTable("order_item", {
   id: uuid("order_item_id").defaultRandom().primaryKey(),
-  orderId: text("order_id"), // PostgreSQL column name allows queries with "USING order_id"
+  orderId: uuid("order_id"), // PostgreSQL column name allows queries with "USING order_id"
   productId: text("product_id"),
   quantity: integer("quantity"),
 });

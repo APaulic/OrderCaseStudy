@@ -67,10 +67,6 @@ export class OrderDto {
   })
   trackingLink?: string;
 
-  @ApiProperty({
-    example: false,
-    required: false,
-  })
   deleted?: boolean;
 }
 

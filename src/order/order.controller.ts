@@ -46,26 +46,22 @@ export class OrderController {
     type: OrderDto,
     isArray: false,
   })
-  @Get("/:id")
+  @Get(":orderId")
   async get(@Param() params: SingleOrderDto) {
-    const savedOrder = await this.orderService.getOrder({
-      ...params,
-    });
+    console.log(params.orderId);
+    try {
+      const order = await this.orderService.getOrder({
+        ...params,
+      });
 
-    if (savedOrder?.status !== OrderStatus.pending) {
-      console.error(`Order, ${savedOrder?.orderId}, not saved to database.`);
-      return {
-        data: savedOrder,
-        message: "Order not created",
-        success: false,
-      };
+      if (order) {
+        return order;
+      }
+    } catch (e) {
+      console.error(`Failed to fetch order with id ${params.orderId}`, e);
     }
 
-    return {
-      data: savedOrder,
-      message: "Order created",
-      success: true,
-    };
+    throw new HttpException("Not found", HttpStatus.NOT_FOUND);
   }
 
   @ApiOkResponse({
@@ -124,6 +120,7 @@ export class OrderController {
 
     const mergedOrder: OrderDto = {
       ...existingOrder,
+      status: updateOrderDto.status,
       trackingLink: updateOrderDto.trackingLink,
       trackingCompany: updateOrderDto.trackingCompany,
       trackingNumber: updateOrderDto.trackingNumber,
@@ -162,12 +159,9 @@ export class OrderController {
       throw new HttpException("Not found", HttpStatus.NOT_FOUND);
     }
 
-    const mergedOrder: OrderDto = {
-      ...existingOrder,
-      deleted: true,
-    };
-
-    const updatedOrder = await this.orderService.updateOrder(mergedOrder);
+    const updatedOrder = await this.orderService.softDeleteOrder({
+      ...deleteOrderDto,
+    });
 
     if (!updatedOrder) {
       console.error(`Failed to soft delete order ${deleteOrderDto.orderId}`);

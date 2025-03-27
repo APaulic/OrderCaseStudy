@@ -1,6 +1,6 @@
 CREATE TABLE "order_item" (
 	"order_item_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"order_id" text,
+	"order_id" uuid,
 	"product_id" text,
 	"quantity" integer
 );

@@ -1,5 +1,5 @@
 {
-  "id": "e5871ee5-8ed7-48c9-9989-7ddf99d82a53",
+  "id": "08a8b7dd-1032-4427-af71-461158def509",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -17,7 +17,7 @@
         },
         "order_id": {
           "name": "order_id",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
