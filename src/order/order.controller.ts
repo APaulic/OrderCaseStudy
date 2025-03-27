@@ -159,22 +159,17 @@ export class OrderController {
       throw new HttpException("Not found", HttpStatus.NOT_FOUND);
     }
 
-    const updatedOrder = await this.orderService.softDeleteOrder({
+    await this.orderService.softDeleteOrder({
       orderId,
     });
 
-    if (!updatedOrder) {
-      console.error(`Failed to soft delete order ${orderId}`);
-      return null;
-    }
-
     // Publish deleted event
     await this.eventBusService.publish("order.deleted", {
-      orderId: updatedOrder.orderId,
+      orderId,
     });
 
     return {
-      data: updatedOrder,
+      data: null,
       message: "Order marked for deletion",
       success: true,
     };
