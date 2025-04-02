@@ -64,29 +64,41 @@ export class OrderController {
   })
   @Post("/create")
   async create(@Body() createOrderDto: CreateOrderDto) {
-    const savedOrder = await this.orderService.saveOrder({
-      ...createOrderDto,
-    });
+    try {
+      const savedOrder = await this.orderService.saveOrder({
+        ...createOrderDto,
+      });
 
-    if (savedOrder?.status !== OrderStatus.pending) {
-      console.error(`Order, ${savedOrder?.orderId}, not saved to database.`);
+      if (savedOrder?.status !== OrderStatus.pending) {
+        console.error(`Order, ${savedOrder?.orderId}, not saved to database.`);
+        return {
+          data: savedOrder,
+          message: "Order not created",
+          success: false,
+        };
+      }
+
+      // Publish created event
+      await this.eventBusService.publish("order.created", {
+        orderId: savedOrder.orderId,
+      });
+
       return {
         data: savedOrder,
-        message: "Order not created",
+        message: "Order created",
+        success: true,
+      };
+    } catch (error) {
+      console.error(
+        `Failed to create order for customer ${createOrderDto.customerId}`,
+        error,
+      );
+      return {
+        data: null,
+        message: "Failed to create order",
         success: false,
       };
     }
-
-    // Publish created event
-    await this.eventBusService.publish("order.created", {
-      orderId: savedOrder.orderId,
-    });
-
-    return {
-      data: savedOrder,
-      message: "Order created",
-      success: true,
-    };
   }
 
   @ApiOkResponse({
@@ -98,51 +110,63 @@ export class OrderController {
     @Param() { orderId }: SingleOrderDto,
     @Body() updateOrderDto: UpdateOrderDto,
   ) {
-    const existingOrder = await this.orderService.getOrder({
-      orderId,
-    });
+    try {
+      const existingOrder = await this.orderService.getOrder({
+        orderId,
+      });
 
-    if (!existingOrder) {
-      throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+      if (!existingOrder) {
+        throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+      }
+
+      // Check new status is valid
+      if (
+        updateOrderDto.status &&
+        !Object.values(OrderStatus).includes(
+          <OrderStatus>updateOrderDto.status?.toLowerCase(),
+        )
+      ) {
+        throw new HttpException("Invalid order status", HttpStatus.BAD_REQUEST);
+      }
+
+      const mergedOrder: OrderDto = {
+        ...existingOrder,
+        status: updateOrderDto.status ?? existingOrder.status,
+        trackingLink: updateOrderDto.trackingLink ?? existingOrder.trackingLink,
+        trackingCompany:
+          updateOrderDto.trackingCompany ?? existingOrder.trackingCompany,
+        trackingNumber:
+          updateOrderDto.trackingNumber ?? existingOrder.trackingNumber,
+      };
+
+      const updatedOrder = await this.orderService.updateOrder(mergedOrder);
+
+      if (!updatedOrder) {
+        console.error(`Failed to update order ${orderId}`);
+        return null;
+      }
+
+      // Publish updated event
+      await this.eventBusService.publish("order.updated", {
+        orderId: updatedOrder.orderId,
+      });
+
+      return {
+        data: updatedOrder,
+        message: "Order updated",
+        success: true,
+      };
+    } catch (error) {
+      console.error(
+        `Failed to update order for customer ${updateOrderDto.customerId}, orderId: ${orderId}`,
+        error,
+      );
+      return {
+        data: null,
+        message: "Failed to update order",
+        success: false,
+      };
     }
-
-    // Check new status is valid
-    if (
-      updateOrderDto.status &&
-      !Object.values(OrderStatus).includes(
-        <OrderStatus>updateOrderDto.status?.toLowerCase(),
-      )
-    ) {
-      throw new HttpException("Invalid order status", HttpStatus.BAD_REQUEST);
-    }
-
-    const mergedOrder: OrderDto = {
-      ...existingOrder,
-      status: updateOrderDto.status ?? existingOrder.status,
-      trackingLink: updateOrderDto.trackingLink ?? existingOrder.trackingLink,
-      trackingCompany:
-        updateOrderDto.trackingCompany ?? existingOrder.trackingCompany,
-      trackingNumber:
-        updateOrderDto.trackingNumber ?? existingOrder.trackingNumber,
-    };
-
-    const updatedOrder = await this.orderService.updateOrder(mergedOrder);
-
-    if (!updatedOrder) {
-      console.error(`Failed to update order ${orderId}`);
-      return null;
-    }
-
-    // Publish updated event
-    await this.eventBusService.publish("order.updated", {
-      orderId: updatedOrder.orderId,
-    });
-
-    return {
-      data: updatedOrder,
-      message: "Order updated",
-      success: true,
-    };
   }
 
   @ApiOkResponse({
@@ -151,27 +175,36 @@ export class OrderController {
   })
   @Delete("/delete/:orderId")
   async delete(@Param() { orderId }: SingleOrderDto) {
-    const existingOrder = await this.orderService.getOrder({
-      orderId,
-    });
+    try {
+      const existingOrder = await this.orderService.getOrder({
+        orderId,
+      });
 
-    if (!existingOrder) {
-      throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+      if (!existingOrder) {
+        throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+      }
+
+      await this.orderService.softDeleteOrder({
+        orderId,
+      });
+
+      // Publish deleted event
+      await this.eventBusService.publish("order.deleted", {
+        orderId,
+      });
+
+      return {
+        data: null,
+        message: "Order marked for deletion",
+        success: true,
+      };
+    } catch (error) {
+      console.error(`Failed to soft delete order: ${orderId}`, error);
+      return {
+        data: null,
+        message: "Failed to delete order",
+        success: false,
+      };
     }
-
-    await this.orderService.softDeleteOrder({
-      orderId,
-    });
-
-    // Publish deleted event
-    await this.eventBusService.publish("order.deleted", {
-      orderId,
-    });
-
-    return {
-      data: null,
-      message: "Order marked for deletion",
-      success: true,
-    };
   }
 }
