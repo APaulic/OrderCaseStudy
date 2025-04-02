@@ -65,6 +65,17 @@ export class OrderController {
   @Post("/create")
   async create(@Body() createOrderDto: CreateOrderDto) {
     try {
+      const isValidCustomer = await this.orderService.validateCustomer({
+        customerId: createOrderDto.customerId,
+      });
+      if (!isValidCustomer) {
+        return {
+          data: createOrderDto,
+          message: "Invalid customer",
+          success: false,
+        };
+      }
+
       const savedOrder = await this.orderService.saveOrder({
         ...createOrderDto,
       });

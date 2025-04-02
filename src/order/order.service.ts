@@ -161,4 +161,12 @@ export class OrderService {
       reserved: !orderItems.find((i) => !i.reserved),
     };
   }
+
+  async validateCustomer({ customerId }): Promise<boolean> {
+    // Perform get request to Customer Service to determine that the provided
+    // customerId is valid and active
+
+    // Below is a stub for testing purposes
+    return customerId !== "zyx-321";
+  }
 }
