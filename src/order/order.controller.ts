@@ -130,6 +130,18 @@ export class OrderController {
         throw new HttpException("Not found", HttpStatus.NOT_FOUND);
       }
 
+      const isValidCustomer = await this.orderService.validateCustomer({
+        customerId: updateOrderDto.customerId,
+      });
+
+      if (!isValidCustomer) {
+        return {
+          data: updateOrderDto,
+          message: "Invalid customer",
+          success: false,
+        };
+      }
+
       // Check new status is valid
       if (
         updateOrderDto.status &&
@@ -142,6 +154,7 @@ export class OrderController {
 
       const mergedOrder: OrderDto = {
         ...existingOrder,
+        customerId: updateOrderDto.customerId ?? existingOrder.customerId,
         status: updateOrderDto.status ?? existingOrder.status,
         trackingLink: updateOrderDto.trackingLink ?? existingOrder.trackingLink,
         trackingCompany:
@@ -186,15 +199,15 @@ export class OrderController {
   })
   @Delete("/delete/:orderId")
   async delete(@Param() { orderId }: SingleOrderDto) {
+    const existingOrder = await this.orderService.getOrder({
+      orderId,
+    });
+
+    if (!existingOrder) {
+      throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+    }
+
     try {
-      const existingOrder = await this.orderService.getOrder({
-        orderId,
-      });
-
-      if (!existingOrder) {
-        throw new HttpException("Not found", HttpStatus.NOT_FOUND);
-      }
-
       await this.orderService.softDeleteOrder({
         orderId,
       });
